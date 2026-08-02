@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>لوحة متابعة مشروع تحسين البيئة السكنية</title>
+<style>
+  :root{
+    --navy:#1F2D3D; --navy2:#27384B; --terra:#C1543C; --gold:#D4A24C;
+    --green:#3E7C59; --amber:#C98A2C; --sand:#B79A6B; --red:#A8442F;
+    --bg:#F5F4F1; --card:#FFFFFF; --line:#E4E1D9; --ink:#26303B; --sub:#6B7280;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Tahoma","Segoe UI",Arial,sans-serif;}
+  header{background:var(--navy);color:#fff;padding:22px 28px 0;position:sticky;top:0;z-index:20;}
+  header h1{margin:0 0 4px;font-size:22px;font-weight:700;}
+  header p{margin:0 0 16px;color:#B7C0CA;font-size:13px;}
+  .tabs{display:flex;gap:4px;overflow-x:auto;}
+  .tab{padding:10px 18px;font-size:13.5px;font-weight:700;color:#B7C0CA;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;}
+  .tab.active{color:#fff;border-color:var(--terra);}
+  .wrap{max-width:1200px;margin:0 auto;padding:20px 24px 60px;}
+  .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:22px;}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 12px;text-align:center;}
+  .kpi .v{font-size:22px;font-weight:700;color:var(--navy2);}
+  .kpi .l{font-size:11px;color:var(--sub);margin-top:4px;line-height:1.4;}
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:18px;}
+  .card h2{margin:0 0 4px;font-size:16px;}
+  .card .hint{font-size:12px;color:var(--sub);margin:0 0 14px;}
+  .grid2{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;}
+  .statusRow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+  .statusRow:last-child{border-bottom:none;}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-left:8px;}
+  .barBg{background:#EFEDE7;border-radius:6px;height:10px;overflow:hidden;flex:1;margin:0 12px;}
+  .barFill{height:100%;border-radius:6px;}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .controls input, .controls select{padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;}
+  .controls input{flex:1;min-width:180px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{background:#F0EEE8;color:var(--sub);font-weight:700;text-align:right;padding:9px 10px;font-size:11.5px;position:sticky;top:0;}
+  td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
+  tr:hover td{background:#FBFAF7;}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;}
+  .b-done{background:#E3F0E7;color:var(--green);}
+  .b-prog{background:#FBEFDD;color:var(--amber);}
+  .b-prep{background:#F0EBE0;color:var(--sand);}
+  .b-stall{background:#F6E4E0;color:var(--red);}
+  .tableWrap{max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:10px;}
+  .note{color:var(--sub);font-size:11.5px;}
+  .govCard{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;}
+  .govHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .govHead b{font-size:14px;}
+  .govMeta{font-size:11.5px;color:var(--sub);}
+  .statGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px;}
+  .statChip{background:#F7F6F2;border-radius:8px;padding:10px;text-align:center;}
+  .statChip .n{font-size:17px;font-weight:700;}
+  .statChip .t{font-size:10.5px;color:var(--sub);margin-top:2px;}
+  canvas{max-width:100%;}
+  @media(max-width:820px){
+    .kpis{grid-template-columns:repeat(2,1fr);}
+    .grid2{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>مشروع تحسين البيئة السكنية</h1>
+  <p>لوحة متابعة تفاعلية — مجلس الجمعيات الأهلية بمنطقة الرياض</p>
+  <div class="tabs">
+    <div class="tab active" data-tab="overview">نظرة عامة</div>
+    <div class="tab" data-tab="assoc">الجمعيات المشاركة</div>
+    <div class="tab" data-tab="gov">حسب المحافظة</div>
+    <div class="tab" data-tab="status">حالة المشاريع</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="kpis" id="kpiRow"></div>
+
+  <div class="panel active" id="panel-overview">
+    <div class="grid2">
+      <div class="card">
+        <h2>وين وصلنا</h2>
+        <p class="hint">حالة المنازل الـ 217 المدرجة في المشروع</p>
+        <div id="statusRows"></div>
+      </div>
+      <div class="card">
+        <h2>توزيع الحالات</h2>
+        <p class="hint">النسبة من إجمالي المنازل</p>
+        <div style="position:relative;height:230px;">
+          <canvas id="donutChart" role="img" aria-label="مخطط دائري لحالة المنازل: 37 تم الترميم، 42 داخل المشروع، 129 متبقٍّ، 9 متعثر"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>الميزانية والمدفوعات</h2>
+      <p class="hint">مقارنة إجمالي التسعيرة التقديرية بما تم تحويله فعليًا</p>
+      <div style="position:relative;height:110px;">
+        <canvas id="budgetChart" role="img" aria-label="مخطط شريطي أفقي يقارن إجمالي التسعيرة 10.82 مليون ريال بالدفعات المحولة 2.11 مليون ريال"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-assoc">
+    <div class="card">
+      <h2>الجمعيات والمشاريع المشاركة</h2>
+      <p class="hint">جميع صفوف المشروع كما وردت في صفحة "لوحة المشروع" — ٤٠ مشروعًا فرعيًا موزعة على ٣٠ جمعية</p>
+      <div class="controls">
+        <input id="searchBox" type="text" placeholder="ابحث عن جمعية أو محافظة...">
+        <select id="statusFilter">
+          <option value="">كل الحالات</option>
+          <option value="مكتمل">مكتمل</option>
+          <option value="قيد التنفيذ">قيد التنفيذ</option>
+          <option value="قيد الإعداد">قيد الإعداد</option>
+          <option value="متعثر">متعثر</option>
+        </select>
+      </div>
+      <div class="tableWrap">
+        <table>
+          <thead><tr>
+            <th>الجمعية المنفذة</th><th>المحافظة</th><th>الموقع</th>
+            <th>المنازل</th><th>نوع العضوية</th><th>التسعيرة (ريال)</th><th>الحالة</th>
+          </tr></thead>
+          <tbody id="assocBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-gov">
+    <div class="card">
+      <h2>توزيع المنازل حسب المحافظة</h2>
+      <p class="hint">إجمالي 217 منزلًا في 22 محافظة</p>
+      <div style="position:relative;height:520px;">
+        <canvas id="govChart" role="img" aria-label="مخطط شريطي أفقي لعدد المنازل في كل محافظة"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <h2>تفاصيل كل محافظة</h2>
+      <div id="govList"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-status">
+    <div class="card">
+      <h2>المشاريع حسب حالة التنفيذ</h2>
+      <p class="hint">تصنيف كل مشروع فرعي حسب آخر حالة مسجّلة له</p>
+      <div id="statusGroups"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const DATA = [
+{a:"جمعية البر برماح",g:"رماح",c:"رماح",h:1,m:"عضوية (ب)",p:63000,s:"مكتمل",n:"تم إكمال المشروع"},
+{a:"محافظة الرياض (هيت)",g:"الرياض",c:"هيت",h:1,m:"عضوية (ب)",p:31500,s:"مكتمل",n:"تم إكمال المشروع"},
+{a:"محافظة الرياض (هيت)",g:"الرياض",c:"هيت — المرحلة الثانية",h:4,m:"-",p:294000,s:"قيد التنفيذ",n:"تم تحويل الدفعة الأولى"},
+{a:"جمعية سين",g:"الدرعية",c:"الدرعية",h:1,m:"عضوية (ب)",p:50000,s:"مكتمل",n:"تم إكمال المشروع"},
+{a:"جمعية بيوت",g:"المجمعة",c:"المجمعة",h:5,m:"لا يوجد",p:250000,s:"قيد التنفيذ",n:"تم تحويل الدفعة الأولى"},
+{a:"جمعية البر بمركز أم سديرة",g:"المجمعة",c:"أم سديرة",h:2,m:"عضوية (ب)",p:45000,s:"قيد التنفيذ",n:"تم تحويل الدفعة الأولى"},
+{a:"جمعية البر بالغاط",g:"الغاط",c:"الغاط",h:3,m:"عضوية (ب)",p:135650,s:"مكتمل",n:"تم إكمال المشروع"},
+{a:"جمعية البر بالزلفي",g:"الزلفي",c:"الزلفي",h:4,m:"عضوية (ب)",p:227680,s:"قيد الإعداد",n:"تم اكتمال النماذج"},
+{a:"جمعية البر بالخرج",g:"الخرج",c:"الخرج",h:8,m:"عضوية (أ) منتهية",p:163800,s:"قيد التنفيذ",n:"في انتظار مسوغات صرف الدفعة الثانية"},
+{a:"جمعية نوارة",g:"الخرج",c:"الخرج",h:20,m:"عضوية (أ)",p:1000000,s:"قيد التنفيذ",n:"تم تحويل الدفعة الثانية"},
+{a:"جمعية سين",g:"الدلم",c:"الدلم",h:5,m:"عضوية (ب)",p:250000,s:"مكتمل",n:"تم إكمال المشروع"},
+{a:"جمعية البر بحوطة بني تميم",g:"حوطة بني تميم",c:"الحوطة",h:2,m:"عضوية (أ)",p:0,s:"متعثر",n:"الجمعية ترى أن الترميم غير مجدٍ — يجري التحويل لجمعية إسكانية"},
+{a:"جمعية البر بالحلوة",g:"حوطة بني تميم",c:"الحلوة",h:2,m:"عضوية (أ)",p:100000,s:"قيد التنفيذ",n:"بانتظار خطاب المبلغ المتبقي"},
+{a:"جمعية بيتي",g:"وادي الدواسر",c:"وادي الدواسر",h:7,m:"عضوية منتسبة",p:0,s:"قيد الإعداد",n:"تم ترميم المستفيدين المطابقين للشروط من قبل الجمعية"},
+{a:"جمعية دار الأمل للإسكان",g:"وادي الدواسر",c:"وادي الدواسر والسليل",h:43,m:"-",p:2590120,s:"قيد الإعداد",n:"بانتظار تعميد الصرف"},
+{a:"جمعية البر بالنويعمة",g:"وادي الدواسر",c:"النويعمة",h:2,m:"عضوية (أ)",p:100000,s:"مكتمل",n:"تم إكمال المشروع"},
+{a:"جمعية البر بالأحمر",g:"الأفلاج",c:"مركز الأحمر",h:1,m:"عضوية (ب) منتهية",p:76300,s:"مكتمل",n:"تم إكمال المشروع"},
+{a:"جمعية البر بالأحمر",g:"الأفلاج",c:"مركز الأحمر — المرحلة الثانية",h:1,m:"عضوية (ب) منتهية",p:71000,s:"قيد الإعداد",n:"بانتظار رد إحسان وتعميد الصرف"},
+{a:"جمعية البر بالبديع",g:"الأفلاج",c:"البديع",h:2,m:"عضوية (ب)",p:77005,s:"مكتمل",n:"تم إكمال المشروع"},
+{a:"جمعية البر بالبديع",g:"الأفلاج",c:"البديع — المرحلة الثانية",h:16,m:"-",p:863385,s:"قيد الإعداد",n:"في انتظار إرسال المطالبة المالية"},
+{a:"جمعية البر بالرين",g:"الرين",c:"الرين",h:0,m:"عضوية (ب)",p:0,s:"متعثر",n:"بدون صك شرعي للمنازل"},
+{a:"جمعية سين",g:"الحريق",c:"الحريق",h:2,m:"عضوية (ب)",p:100000,s:"مكتمل",n:"تم إكمال المشروع"},
+{a:"جمعية البر بشقراء",g:"شقراء",c:"شقراء",h:2,m:"منتسبة",p:37000,s:"مكتمل",n:"تم إكمال المشروع"},
+{a:"جمعية البر بالبجادية",g:"الدوادمي",c:"البجادية",h:5,m:"عضوية (ب)",p:280867,s:"مكتمل",n:"تم إكمال المشروع"},
+{a:"جمعية البر بالبجادية",g:"الدوادمي",c:"البجادية — المرحلة الثانية",h:5,m:"عضوية (ب)",p:302736,s:"مكتمل",n:"تم إكمال المشروع"},
+{a:"جمعية البر بالبجادية",g:"الدوادمي",c:"البجادية — المرحلة الثالثة",h:9,m:"عضوية (ب)",p:664907,s:"قيد الإعداد",n:"بانتظار استكمال النماذج"},
+{a:"جمعية البر بالنبوان",g:"الدوادمي",c:"مركز النبوان",h:5,m:"عضوية (أ)",p:250000,s:"قيد الإعداد",n:"بانتظار استكمال عروض الأسعار"},
+{a:"جمعية البر الخيرية بساجر",g:"الدوادمي",c:"ساجر",h:1,m:"-",p:50000,s:"قيد التنفيذ",n:"بانتظار رد إحسان على مسوغات الدفعة الأولى"},
+{a:"جمعية البر بمغيب السر",g:"الدوادمي",c:"مغيب السر",h:14,m:"منتسبة (منهية)",p:918690,s:"قيد الإعداد",n:"يجري تحويلهم لجمعية إسكانية"},
+{a:"جمعية البر بمركز خف",g:"الدوادمي",c:"مركز خف",h:11,m:"-",p:751233,s:"قيد الإعداد",n:"بانتظار رد اللجنة النسائية"},
+{a:"جمعية البر بالقويعية",g:"القويعية",c:"القويعية",h:20,m:"عضوية (ب)",p:782246,s:"قيد الإعداد",n:"أُرسلت جميع المستندات — بانتظار تعميد الصرف"},
+{a:"جمعية سين",g:"القويعية",c:"الجلة وتبراك",h:1,m:"عضوية (ب)",p:50000,s:"مكتمل",n:"تم إكمال المشروع"},
+{a:"جمعية البر بعفيف",g:"عفيف",c:"عفيف",h:0,m:"عضوية (أ)",p:0,s:"متعثر",n:"رفضت الجمعية قبول المشروع"},
+{a:"جمعية البر بالشواطن",g:"عفيف",c:"الشواطن",h:0,m:"عضوية (ب)",p:0,s:"قيد الإعداد",n:"عدم وجود صكوك للمنازل المرشّحة"},
+{a:"جمعية أسقف",g:"ضرماء",c:"ضرماء",h:1,m:"لا يوجد",p:52095,s:"قيد الإعداد",n:"بانتظار استكمال نماذج المستفيدين"},
+{a:"جمعية استقرار",g:"حريملاء",c:"حريملاء",h:1,m:"لا يوجد",p:0,s:"قيد الإعداد",n:"بانتظار استكمال نماذج المستفيدين"},
+{a:"جمعية البر بالمزاحمية",g:"المزاحمية",c:"المزاحمية",h:2,m:"عضوية (أ)",p:50000,s:"مكتمل",n:"تم إكمال المشروع"},
+{a:"جمعية البر بالمزاحمية",g:"المزاحمية",c:"المزاحمية — المرحلة الثانية",h:1,m:"عضوية (أ)",p:35000,s:"قيد الإعداد",n:"بانتظار الرد على تعديل التواريخ"},
+{a:"جمعية البر بمرات",g:"مرات",c:"مرات",h:4,m:"عضوية (ب)",p:107000,s:"مكتمل",n:"تم إكمال المشروع"},
+{a:"جمعية استقرار",g:"ثادق",c:"ثادق",h:3,m:"لا يوجد",p:0,s:"قيد الإعداد",n:"بانتظار استكمال نماذج المستفيدين"},
+];
+
+const STAGE = {done:37, prog:42, prep:129, stall:9};
+const totalHouses = 217;
+const totalBudget = 10820214;
+const totalTransferred = 2107680;
+const totalMembers = 35;
+
+const priced = DATA.filter(d=>d.p>0);
+const pricedHouses = priced.reduce((s,d)=>s+d.h,0);
+const pricedSum = priced.reduce((s,d)=>s+d.p,0);
+const avgPrice = Math.round(pricedSum/pricedHouses);
+const uniqAssoc = new Set(DATA.map(d=>d.a).filter(a=>a && a!=="-" && !a.startsWith("محافظة"))).size;
+const doneRows = DATA.filter(d=>d.s==="مكتمل").length;
+const completionPct = Math.round(STAGE.done/totalHouses*100);
+
+document.getElementById("kpiRow").innerHTML = `
+  <div class="kpi"><div class="v">217</div><div class="l">إجمالي المنازل المدرجة</div></div>
+  <div class="kpi"><div class="v">${avgPrice.toLocaleString('en-US')}</div><div class="l">متوسط سعر ترميم المنزل (ريال)</div></div>
+  <div class="kpi"><div class="v">${uniqAssoc}</div><div class="l">جمعية مشاركة في التنفيذ</div></div>
+  <div class="kpi"><div class="v">10.82M</div><div class="l">إجمالي التسعيرة التقديرية (ريال)</div></div>
+  <div class="kpi"><div class="v">2.11M</div><div class="l">إجمالي الدفعات المحوّلة (ريال)</div></div>
+  <div class="kpi"><div class="v">${completionPct}%</div><div class="l">نسبة المنازل المكتملة فعليًا</div></div>
+`;
+
+const statusMeta = {
+  "مكتمل":{cls:"b-done",dot:"var(--green)"},
+  "قيد التنفيذ":{cls:"b-prog",dot:"var(--amber)"},
+  "قيد الإعداد":{cls:"b-prep",dot:"var(--sand)"},
+  "متعثر":{cls:"b-stall",dot:"var(--red)"},
+};
+
+function fmt(n){ return n>0 ? n.toLocaleString('en-US') : "—"; }
+
+const rowsWrap = [
+  {label:"تم الترميم", val:STAGE.done, color:"var(--green)", note:"اكتمل الترميم وسُلّم المنزل للمستفيد"},
+  {label:"داخل المشروع", val:STAGE.prog, color:"var(--amber)", note:"قيد التنفيذ أو تحويل الدفعات"},
+  {label:"متبقٍّ — جاري الرفع", val:STAGE.prep, color:"var(--sand)", note:"استكمال نماذج ومطالبات مالية"},
+  {label:"متعثر", val:STAGE.stall, color:"var(--red)", note:"رفض، أو مشكلة صكوك"},
+];
+document.getElementById("statusRows").innerHTML = rowsWrap.map(r=>`
+  <div class="statusRow">
+    <span><span class="dot" style="background:${r.color}"></span>${r.label}<br><span class="note">${r.note}</span></span>
+    <span class="barBg"><span class="barFill" style="width:${r.val/totalHouses*100}%;background:${r.color}"></span></span>
+    <b>${r.val}</b>
+  </div>`).join("");
+
+new Chart(document.getElementById('donutChart'), {
+  type:'doughnut',
+  data:{labels:['تم الترميم','داخل المشروع','متبقٍّ — جاري الرفع','متعثر'],
+    datasets:[{data:[STAGE.done,STAGE.prog,STAGE.prep,STAGE.stall],
+      backgroundColor:['#3E7C59','#C98A2C','#B79A6B','#A8442F'],borderColor:'#fff',borderWidth:2}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
+    plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:10}}}}
+});
+
+new Chart(document.getElementById('budgetChart'), {
+  type:'bar',
+  data:{labels:['الميزانية'],
+    datasets:[
+      {label:'إجمالي التسعيرة', data:[totalBudget], backgroundColor:'#27384B'},
+      {label:'الدفعات المحوّلة', data:[totalTransferred], backgroundColor:'#C1543C'},
+    ]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    scales:{x:{ticks:{callback:v=>(v/1000000).toFixed(1)+'M'}}},
+    plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:10}}}}
+});
+
+const searchBox = document.getElementById('searchBox');
+const statusFilter = document.getElementById('statusFilter');
+function renderAssoc(){
+  const q = searchBox.value.trim();
+  const sf = statusFilter.value;
+  const rows = DATA.filter(d=>{
+    const matchQ = !q || d.a.includes(q) || d.g.includes(q) || d.c.includes(q);
+    const matchS = !sf || d.s===sf;
+    return matchQ && matchS;
+  });
+  document.getElementById('assocBody').innerHTML = rows.map(d=>{
+    const meta = statusMeta[d.s];
+    return `<tr>
+      <td>${d.a}</td><td>${d.g}</td><td>${d.c}</td>
+      <td>${d.h}</td><td>${d.m}</td><td>${fmt(d.p)}</td>
+      <td><span class="badge ${meta.cls}">${d.s}</span></td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="7" style="text-align:center;color:var(--sub);padding:20px;">لا توجد نتائج مطابقة</td></tr>`;
+}
+searchBox.addEventListener('input', renderAssoc);
+statusFilter.addEventListener('change', renderAssoc);
+renderAssoc();
+
+const govMap = {};
+DATA.forEach(d=>{
+  if(!govMap[d.g]) govMap[d.g] = {houses:0, price:0, assoc:new Set(), done:0, rows:0};
+  govMap[d.g].houses += d.h;
+  govMap[d.g].price += d.p;
+  govMap[d.g].assoc.add(d.a);
+  govMap[d.g].rows += 1;
+  if(d.s==="مكتمل") govMap[d.g].done += 1;
+});
+const govEntries = Object.entries(govMap).sort((a,b)=>b[1].houses-a[1].houses);
+
+new Chart(document.getElementById('govChart'), {
+  type:'bar',
+  data:{labels:govEntries.map(e=>e[0]),
+    datasets:[{label:'عدد المنازل', data:govEntries.map(e=>e[1].houses), backgroundColor:'#27384B', borderRadius:4}]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{x:{beginAtZero:true}}}
+});
+
+document.getElementById('govList').innerHTML = govEntries.map(([g,v])=>`
+  <div class="govCard">
+    <div class="govHead">
+      <b>${g}</b>
+      <span class="govMeta">${v.assoc.size} جمعية · ${v.rows} مشروع فرعي</span>
+    </div>
+    <div class="statGrid">
+      <div class="statChip"><div class="n">${v.houses}</div><div class="t">منزل</div></div>
+      <div class="statChip"><div class="n">${fmt(v.price)}</div><div class="t">ريال تسعيرة</div></div>
+      <div class="statChip"><div class="n">${v.done}</div><div class="t">مشاريع مكتملة</div></div>
+      <div class="statChip"><div class="n">${Math.round(v.done/v.rows*100)}%</div><div class="t">نسبة الاكتمال</div></div>
+    </div>
+  </div>`).join("");
+
+const statusOrder = ["مكتمل","قيد التنفيذ","قيد الإعداد","متعثر"];
+document.getElementById('statusGroups').innerHTML = statusOrder.map(s=>{
+  const rows = DATA.filter(d=>d.s===s);
+  const houses = rows.reduce((sum,d)=>sum+d.h,0);
+  const meta = statusMeta[s];
+  return `<div style="margin-bottom:22px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <span class="badge ${meta.cls}">${s}</span>
+      <span class="note">${rows.length} مشروع فرعي — ${houses} منزل</span>
+    </div>
+    <div class="tableWrap" style="max-height:260px;">
+      <table>
+        <thead><tr><th>الجمعية</th><th>المحافظة / الموقع</th><th>المنازل</th><th>ملاحظة</th></tr></thead>
+        <tbody>
+          ${rows.map(d=>`<tr><td>${d.a}</td><td>${d.g} — ${d.c}</td><td>${d.h}</td><td class="note">${d.n}</td></tr>`).join("")}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}).join("");
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
